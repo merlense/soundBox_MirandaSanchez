@@ -1,0 +1,39 @@
+@'
+# ========== TODO lo que NO debe subir ==========
+
+# Node modules (frontend y backend)
+node_modules/
+react/node_modules/
+server/node_modules/
+
+# Package lock files
+package-lock.json
+react/package-lock.json
+server/package-lock.json
+
+# Environment variables
+.env
+server/.env
+
+# Build outputs
+build/
+dist/
+react/build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Archivos pesados/innecesarios
+*.pdf
+*.pptx
+*.ppt
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+'@ | Out-File .gitignore -Encoding UTF8
