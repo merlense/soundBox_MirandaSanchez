@@ -1,12 +1,12 @@
-import express from "express";
-import fetch from "node-fetch";
-import cors from "cors";
-import dotenv from "dotenv";
+﻿const express = require("express");
+const fetch = require("node-fetch");
+const cors = require("cors");
+const dotenv = require("dotenv");
 
 dotenv.config();
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: process.env.CORS_ORIGIN || "http://localhost:3000", credentials: true }));
 app.use(express.json());
 
 const CLIENT_ID = process.env.CLIENT_ID;
@@ -70,7 +70,7 @@ app.get("/top-argentina", ensureToken, async (req, res) => {
         
         let allTracks = [];
         
-        // Buscar en múltiples categorías
+        // Buscar en mÃºltiples categorÃ­as
         for (const query of searchQueries) {
             try {
                 const response = await fetch(
@@ -120,7 +120,7 @@ app.get("/top-argentina", ensureToken, async (req, res) => {
     }
 });
 
-// búsqueda de álbumes
+// bÃºsqueda de Ã¡lbumes
 app.get("/search", ensureToken, async (req, res) => {
     const q = req.query.q;
     if (!q) return res.json([]);
@@ -143,11 +143,11 @@ app.get("/search", ensureToken, async (req, res) => {
         res.json(data.albums.items);
     } catch (err) {
         console.error('Search error:', err);
-        res.status(500).json({ error: "Error buscando álbumes en Spotify" });
+        res.status(500).json({ error: "Error buscando Ã¡lbumes en Spotify" });
     }
 });
 
-// para obtener álbum por track ID
+// para obtener Ã¡lbum por track ID
 app.get("/album-by-track", ensureToken, async (req, res) => {
     const trackId = req.query.trackId;
     
@@ -177,7 +177,7 @@ app.get("/album-by-track", ensureToken, async (req, res) => {
         
     } catch (err) {
         console.error('Error getting album by track:', err);
-        res.status(500).json({ error: "Error obteniendo información del álbum" });
+        res.status(500).json({ error: "Error obteniendo informaciÃ³n del Ã¡lbum" });
     }
 });
 
@@ -191,3 +191,4 @@ app.listen(PORT, () => {
     console.log(`Endpoint: http://localhost:${PORT}/top-argentina`);
     console.log('='.repeat(50));
 });
+
