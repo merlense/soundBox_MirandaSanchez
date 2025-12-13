@@ -1,6 +1,14 @@
 ﻿const express = require("express");
-const fetch = require("node-fetch");
+
+let fetch;
+try {
+  fetch = require("node-fetch");
+} catch (e) {
+  console.error("Error cargando node-fetch:", e.message);
+}
+
 const cors = require("cors");
+
 const dotenv = require("dotenv");
 
 dotenv.config();
@@ -120,7 +128,6 @@ app.get("/top-argentina", ensureToken, async (req, res) => {
     }
 });
 
-// bÃºsqueda de Ã¡lbumes
 app.get("/search", ensureToken, async (req, res) => {
     const q = req.query.q;
     if (!q) return res.json([]);
