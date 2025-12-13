@@ -1,0 +1,309 @@
+body { 
+    font-family: Arial; 
+    background:#f8f9fa; 
+}
+
+.card {
+    background:white; 
+    border-radius:10px; 
+    padding:15px; 
+    text-align:center; 
+    box-shadow:0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.card iframe, .modal iframe {
+    width: 100%;       
+    height: 450px;     
+    border-radius: 12px;
+    margin-bottom: 10px; 
+    display: block;
+}
+
+.card p {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.stars { 
+    display:flex; 
+    justify-content:center; 
+    gap:5px; 
+    margin:10px 0; 
+}
+
+.star { 
+    font-size:20px; 
+    cursor:pointer; 
+    color:gray; 
+}
+
+.star.active { 
+    color:gold; 
+}
+
+.btn-spotify {
+    background-color: #1DB954; 
+    border-color: #1DB954;
+    color: white;
+}
+
+.btn-spotify:hover {
+    background-color: #1ed760; 
+    border-color: #1ed760;
+    color: white;
+}
+
+.social-icon {
+    font-size: 1.5rem;
+    transition: transform 0.3s, color 0.3s;
+}
+
+.social-icon:hover {
+    color: #1DB954;
+    transform: scale(1.2);
+}
+
+.modal-backdrop {
+    background-color: rgba(0,0,0,0.5);
+}
+
+.popular-albums-section {
+  background: white;
+  padding: 2rem;
+  border-radius: 16px;
+  margin: 2rem 0;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border: 1px solid #eaeaea;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 1.5rem;
+}
+
+.albums-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1.5rem;
+}
+
+.album-card {
+  transition: all 0.3s ease;
+  border-radius: 12px;
+}
+
+
+
+.album-card:hover {
+  transform: translateY(-4px);
+}
+
+.album-image-container {
+  position: relative;
+  margin-bottom: 0.75rem;
+}
+
+.album-image {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.btn-add-album-overlay {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #1DB954 0%, #1ed760 100%);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 12px rgba(29, 185, 84, 0.4);
+  opacity: 0;
+}
+
+.album-image-container:hover .btn-add-album-overlay {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.btn-add-album-overlay:hover {
+  transform: scale(1.15);
+  box-shadow: 0 4px 16px rgba(29, 185, 84, 0.6);
+}
+
+.btn-add-album-overlay:disabled {
+  background: #ccc;
+  box-shadow: none;
+  transform: none;
+}
+
+.album-info {
+  text-align: left;
+}
+
+.album-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.album-artist {
+  font-size: 0.85rem;
+  color: #666;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.album-card.loading .album-image {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+.album-card.loading .album-title,
+.album-card.loading .album-artist {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 4px;
+  height: 16px;
+  margin-bottom: 6px;
+}
+
+.album-card.loading .album-artist {
+  height: 14px;
+  width: 80%;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .popular-albums-section {
+    padding: 1.5rem;
+  }
+  
+  .albums-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
+  }
+  
+  .album-title {
+    font-size: 0.9rem;
+  }
+  
+  .album-artist {
+    font-size: 0.8rem;
+  }
+}
+
+.placeholder {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 6px;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .top-songs-section {
+        padding: 1.5rem;
+        margin: 1rem 0;
+    }
+    
+    .song-title {
+        font-size: 0.9rem;
+    }
+    
+    .song-artist {
+        font-size: 0.8rem;
+    }
+    
+    .position-badge {
+        width: 32px;
+        height: 32px;
+        font-size: 0.8rem;
+    }
+}
+
+/* App.css - Añade al final del archivo */
+:root {
+  --spotify-green: #1DB954;
+  --spotify-light-green: #1ed760;
+  --spotify-dark: #121212;
+  --text-primary: #1a1a1a;
+  --text-secondary: #666666;
+  --text-tertiary: #888888;
+  --background-light: #f8f9fa;
+  --card-bg: #ffffff;
+  --border-color: #eaeaea;
+  --shadow-light: 0 2px 8px rgba(0,0,0,0.1);
+  --shadow-medium: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  background: var(--background-light);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--spotify-green);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--spotify-light-green);
+}
+
+/* Clases utilitarias */
+.text-spotify-green {
+  color: var(--spotify-green) !important;
+}
+
+.bg-spotify-green {
+  background-color: var(--spotify-green) !important;
+}
