@@ -1,11 +1,11 @@
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
-
 export const getTopSongs = async () => {
   try {
     console.log('Fetching top songs from Argentina...');
     
-    const response = await fetch('http://localhost:3000/top-argentina');
+    // CORREGIR: Cambiar esta línea
+    const response = await fetch(`${API_URL}/top-argentina`);
     
     if (!response.ok) {
       throw new Error(`Error HTTP: ${response.status}`);
@@ -30,7 +30,8 @@ export const getAlbumByTrack = async (trackId) => {
   try {
     console.log('Searching album for track:', trackId);
     
-    const response = await fetch(`http://localhost:3000/album-by-track?trackId=${trackId}`);
+    // CORREGIR: Cambiar esta línea
+    const response = await fetch(`${API_URL}/album-by-track?trackId=${trackId}`);
     
     if (!response.ok) {
       throw new Error(`Error HTTP: ${response.status}`);
