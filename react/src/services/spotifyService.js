@@ -1,4 +1,4 @@
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+const API_URL = 'https://soundbox.up.railway.app';
 
 export const searchAlbums = async (query) => {
   try {
