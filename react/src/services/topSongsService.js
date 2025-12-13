@@ -1,8 +1,10 @@
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+
+
 export const getTopSongs = async () => {
   try {
-    console.log('🎵 Fetching top songs from Argentina...');
+    console.log('Fetching top songs from Argentina...');
     
-    // Usar localhost:3000 (backend) no el puerto de React
     const response = await fetch('http://localhost:3000/top-argentina');
     
     if (!response.ok) {
