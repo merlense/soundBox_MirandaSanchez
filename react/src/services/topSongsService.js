@@ -4,7 +4,6 @@ export const getTopSongs = async () => {
   try {
     console.log('Fetching top songs from Argentina...');
     
-    // CORREGIR: Cambiar esta línea
     const response = await fetch(`${API_URL}/top-argentina`);
     
     if (!response.ok) {
@@ -30,7 +29,6 @@ export const getAlbumByTrack = async (trackId) => {
   try {
     console.log('Searching album for track:', trackId);
     
-    // CORREGIR: Cambiar esta línea
     const response = await fetch(`${API_URL}/album-by-track?trackId=${trackId}`);
     
     if (!response.ok) {
