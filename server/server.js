@@ -8,21 +8,22 @@ const app = express();
 
 // CONFIGURACION DE CORS CORREGIDA
 const allowedOrigins = [
-    'https://sound-box-miranda-sanchez-fupgl7kwz-agustinas-projects-ae398ce4.vercel.app',
-    process.env.CORS_ORIGIN
-].filter(Boolean);
+    'https://sound-box-miranda-sanchez.vercel.app',
+    'https://sound-box-miranda-sanchez-9odbxfu0j-agustinas-projects-ae398ce4.vercel.app',
+    'https://sound-box-miranda-sanchez-fupgl7kwz-agustinas-projects-ae398ce4.vercel.app'
+];
 
 app.use(cors({
     origin: function (origin, callback) {
         if (!origin) return callback(null, true);
         
-        if (allowedOrigins.indexOf(origin) === -1) {
-            const msg = `El origen ${origin} no esta permitido por CORS. Origenes permitidos: ${allowedOrigins.join(', ')}`;
-            console.log('CORS ERROR: ' + msg);
-            return callback(new Error(msg), false);
+        if (allowedOrigins.includes(origin)) {
+            console.log('CORS PERMITIDO para:', origin);
+            return callback(null, true);
         }
-        console.log(`CORS OK: Origen permitido - ${origin}`);
-        return callback(null, true);
+        
+        console.log('CORS BLOQUEADO para:', origin);
+        return callback(new Error('CORS bloqueado'), false);
     },
     credentials: true,
     methods: ['GET', 'POST', 'OPTIONS'],

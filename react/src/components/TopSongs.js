@@ -174,7 +174,7 @@ const getTopSongs = async () => {
     if (songs.error) {
       throw new Error(songs.error);
     }
-    
+    //
     console.log('Top songs found:', songs.length);
     return songs;
     
