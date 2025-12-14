@@ -40,63 +40,85 @@ let tokenExpires = 0;
 
 async function getAccessToken() {
     try {
-        console.log('Solicitando token de acceso a Spotify...');
+        console.log('STEP 1 - Iniciando solicitud de token de Spotify...');
         
+        // VERIFICACIÓN CRÍTICA: ¿Tenemos credenciales?
         if (!CLIENT_ID || !CLIENT_SECRET) {
-            throw new Error('Faltan CLIENT_ID o CLIENT_SECRET en las variables de entorno');
+            console.error('ERROR CRÍTICO: CLIENT_ID o CLIENT_SECRET están VACÍOS');
+            console.log(`CLIENT_ID: ${CLIENT_ID ? 'Presente' : 'Ausente'}`);
+            console.log(`CLIENT_SECRET: ${CLIENT_SECRET ? 'Presente' : 'Ausente'}`);
+            throw new Error('Credenciales de Spotify no configuradas en variables de entorno');
         }
-
+        
+        console.log('STEP 2 - Credenciales encontradas, preparando petición...');
+        
         const authString = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64');
         
-        const params = new URLSearchParams();
-        params.append('grant_type', 'client_credentials');
-
+        console.log('STEP 3 - Enviando petición a Spotify API...');
         const response = await fetch("https://accounts.spotify.com/api/token", {
             method: "POST",
             headers: {
                 "Authorization": `Basic ${authString}`,
                 "Content-Type": "application/x-www-form-urlencoded",
             },
-            body: params.toString()
+            body: "grant_type=client_credentials"
         });
 
-        console.log('📊 Estado de respuesta de Spotify:', response.status);
-
+        console.log(`STEP 4 - Spotify respondió con status: ${response.status}`);
+        
+        const responseText = await response.text();
+        console.log(`STEP 5 - Respuesta cruda de Spotify: ${responseText}`);
+        
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Error de Spotify:', errorText);
-            throw new Error(`Token request failed: ${response.status} - ${errorText}`);
+            // ANÁLISIS DETALLADO DEL ERROR
+            let errorMessage = `Token request failed: ${response.status}`;
+            try {
+                const errorData = JSON.parse(responseText);
+                if (errorData.error === 'invalid_client') {
+                    errorMessage += ' - ERROR: Credenciales inválidas (CLIENT_ID o CLIENT_SECRET incorrectos)';
+                } else {
+                    errorMessage += ` - ${responseText}`;
+                }
+            } catch {
+                errorMessage += ` - ${responseText}`;
+            }
+            console.error(`${errorMessage}`);
+            throw new Error(errorMessage);
         }
 
-        const data = await response.json();
+        const data = JSON.parse(responseText);
         accessToken = data.access_token;
         tokenExpires = Date.now() + data.expires_in * 1000;
-        console.log('Token de acceso obtenido exitosamente');
-        console.log('Token expira en:', new Date(tokenExpires).toLocaleTimeString());
+        console.log('STEP 6 - Token obtenido EXITOSAMENTE');
+        console.log(`   Token expira en: ${new Date(tokenExpires).toLocaleTimeString()}`);
         return accessToken;
         
     } catch (error) {
-        console.error('Error obteniendo token de acceso:', error.message);
+        console.error('ERROR COMPLETO en getAccessToken:', error.message);
         throw error;
     }
 }
 
 async function ensureToken(req, res, next) {
+    console.log(`Ruta solicitada: ${req.path} | Origen: ${req.headers.origin || 'N/A'}`);
+    
     try {
-        console.log('Verificando token...');
         if (!accessToken || Date.now() > tokenExpires) {
-            console.log('Token expirado o no presente, renovando...');
+            console.log('Token expirado o inexistente, solicitando nuevo...');
             await getAccessToken();
+            console.log('Nuevo token obtenido, continuando...');
         } else {
-            console.log('Token válido presente');
+            console.log('Token válido encontrado, usando caché...');
         }
         next();
     } catch (error) {
-        console.error('Falló la verificación del token:', error.message);
-        res.status(500).json({ 
-            error: "Error de autenticación con Spotify",
-            message: error.message,
-            details: "Verifica tus credenciales CLIENT_ID y CLIENT_SECRET"
+        console.error(`FALLO CRÍTICO en ensureToken para ruta ${req.path}:`, error.message);
+        // Devuelve un error 401 más informativo
+        res.status(401).json({ 
+            error: "Authentication to Spotify failed",
+            details: error.message,
+            route: req.path,
+            timestamp: new Date().toISOString()
         });
     }
 }
