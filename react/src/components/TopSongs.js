@@ -163,7 +163,7 @@ const getTopSongs = async () => {
   try {
     console.log('Fetching top songs from Argentina...');
     
-    const response = await fetch('http://localhost:3000/top-argentina');
+    const response = await fetch('https://soundbox.up.railway.app/top-argentina');
     
     if (!response.ok) {
       throw new Error(`Error HTTP: ${response.status}`);
@@ -188,8 +188,7 @@ const getAlbumByTrack = async (trackId) => {
   try {
     console.log('Searching album for track:', trackId);
     
-    const response = await fetch(`http://localhost:3000/album-by-track?trackId=${trackId}`);
-    
+const response = await fetch(`https://soundbox.up.railway.app/album-by-track?trackId=${trackId}`);    
     if (!response.ok) {
       throw new Error(`Error HTTP: ${response.status}`);
     }

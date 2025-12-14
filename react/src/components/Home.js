@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-const API_BASE = "http://localhost:3000"; 
+const API_BASE = "https://soundbox.up.railway.app";
 
 function Home() {
   const [albums, setAlbums] = useState([]);

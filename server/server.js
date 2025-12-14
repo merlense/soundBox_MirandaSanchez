@@ -6,55 +6,51 @@ dotenv.config();
 
 const app = express();
 
-// Configuración CORRECTA de CORS para producción
+// CONFIGURACION DE CORS CORREGIDA
 const allowedOrigins = [
-  'https://soundbox-mirandasanchez.vercel.app',
-  process.env.CORS_ORIGIN
+    'https://sound-box-miranda-sanchez-fupgl7kwz-agustinas-projects-ae398ce4.vercel.app',
+    process.env.CORS_ORIGIN
 ].filter(Boolean);
 
 app.use(cors({
-  origin: function (origin, callback) {
-    // Permitir solicitudes sin origen (como apps móviles o curl)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = `El origen ${origin} no está permitido por CORS`;
-      console.error('CORS bloqueado:', msg);
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
-  },
-  credentials: true
+    origin: function (origin, callback) {
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = `El origen ${origin} no esta permitido por CORS. Origenes permitidos: ${allowedOrigins.join(', ')}`;
+            console.log('CORS ERROR: ' + msg);
+            return callback(new Error(msg), false);
+        }
+        console.log(`CORS OK: Origen permitido - ${origin}`);
+        return callback(null, true);
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+app.options('*', cors());
 app.use(express.json());
 
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
-
-console.log('Configuración cargada - Client ID:', CLIENT_ID ? 'Presente' : 'Faltante');
-console.log('CORS Origins permitidos:', allowedOrigins);
 
 let accessToken = null;
 let tokenExpires = 0;
 
 async function getAccessToken() {
     try {
-        console.log('STEP 1 - Iniciando solicitud de token de Spotify...');
+        console.log('INFO: Solicitando token de Spotify...');
         
-        // VERIFICACIÓN CRÍTICA: ¿Tenemos credenciales?
         if (!CLIENT_ID || !CLIENT_SECRET) {
-            console.error('ERROR CRÍTICO: CLIENT_ID o CLIENT_SECRET están VACÍOS');
-            console.log(`CLIENT_ID: ${CLIENT_ID ? 'Presente' : 'Ausente'}`);
-            console.log(`CLIENT_SECRET: ${CLIENT_SECRET ? 'Presente' : 'Ausente'}`);
+            console.error('ERROR: CLIENT_ID o CLIENT_SECRET estan vacios');
+            console.log(`DEBUG - CLIENT_ID: ${CLIENT_ID ? 'Presente' : 'Ausente'}`);
+            console.log(`DEBUG - CLIENT_SECRET: ${CLIENT_SECRET ? 'Presente' : 'Ausente'}`);
             throw new Error('Credenciales de Spotify no configuradas en variables de entorno');
         }
         
-        console.log('STEP 2 - Credenciales encontradas, preparando petición...');
-        
         const authString = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64');
         
-        console.log('STEP 3 - Enviando petición a Spotify API...');
         const response = await fetch("https://accounts.spotify.com/api/token", {
             method: "POST",
             headers: {
@@ -64,56 +60,54 @@ async function getAccessToken() {
             body: "grant_type=client_credentials"
         });
 
-        console.log(`STEP 4 - Spotify respondió con status: ${response.status}`);
+        console.log(`DEBUG - Spotify respondio con status: ${response.status}`);
         
         const responseText = await response.text();
-        console.log(`STEP 5 - Respuesta cruda de Spotify: ${responseText}`);
+        console.log(`DEBUG - Respuesta de Spotify: ${responseText}`);
         
         if (!response.ok) {
-            // ANÁLISIS DETALLADO DEL ERROR
             let errorMessage = `Token request failed: ${response.status}`;
             try {
                 const errorData = JSON.parse(responseText);
                 if (errorData.error === 'invalid_client') {
-                    errorMessage += ' - ERROR: Credenciales inválidas (CLIENT_ID o CLIENT_SECRET incorrectos)';
+                    errorMessage += ' - ERROR: Credenciales invalidas (CLIENT_ID o CLIENT_SECRET incorrectos)';
                 } else {
                     errorMessage += ` - ${responseText}`;
                 }
             } catch {
                 errorMessage += ` - ${responseText}`;
             }
-            console.error(`${errorMessage}`);
+            console.error(`ERROR: ${errorMessage}`);
             throw new Error(errorMessage);
         }
 
         const data = JSON.parse(responseText);
         accessToken = data.access_token;
         tokenExpires = Date.now() + data.expires_in * 1000;
-        console.log('STEP 6 - Token obtenido EXITOSAMENTE');
-        console.log(`   Token expira en: ${new Date(tokenExpires).toLocaleTimeString()}`);
+        console.log('SUCCESS: Token obtenido correctamente');
+        console.log(`DEBUG - Token expira: ${new Date(tokenExpires).toLocaleTimeString()}`);
         return accessToken;
         
     } catch (error) {
-        console.error('ERROR COMPLETO en getAccessToken:', error.message);
+        console.error('ERROR en getAccessToken:', error.message);
         throw error;
     }
 }
 
 async function ensureToken(req, res, next) {
-    console.log(`Ruta solicitada: ${req.path} | Origen: ${req.headers.origin || 'N/A'}`);
+    console.log(`DEBUG - Ruta solicitada: ${req.path} | Origen: ${req.headers.origin || 'N/A'}`);
     
     try {
         if (!accessToken || Date.now() > tokenExpires) {
-            console.log('Token expirado o inexistente, solicitando nuevo...');
+            console.log('DEBUG - Token expirado o inexistente, solicitando nuevo...');
             await getAccessToken();
-            console.log('Nuevo token obtenido, continuando...');
+            console.log('DEBUG - Nuevo token obtenido');
         } else {
-            console.log('Token válido encontrado, usando caché...');
+            console.log('DEBUG - Token valido en cache');
         }
         next();
     } catch (error) {
-        console.error(`FALLO CRÍTICO en ensureToken para ruta ${req.path}:`, error.message);
-        // Devuelve un error 401 más informativo
+        console.error(`ERROR en ensureToken para ruta ${req.path}:`, error.message);
         res.status(401).json({ 
             error: "Authentication to Spotify failed",
             details: error.message,
@@ -123,36 +117,24 @@ async function ensureToken(req, res, next) {
     }
 }
 
-// Ruta de prueba de salud
-app.get("/", (req, res) => {
-    res.json({ 
-        status: "online",
-        service: "SoundBox Backend API",
-        endpoints: {
-            topArgentina: "/top-argentina",
-            search: "/search?q=[query]",
-            albumByTrack: "/album-by-track?trackId=[id]",
-            health: "/health"
-        },
-        spotifyStatus: accessToken ? "Conectado" : "No conectado"
-    });
-});
-
+// RUTA DE SALUD
 app.get("/health", (req, res) => {
-    res.json({ 
+    const healthStatus = {
         status: "healthy",
         timestamp: new Date().toISOString(),
         spotify: {
             hasCredentials: !!(CLIENT_ID && CLIENT_SECRET),
-            hasToken: !!accessToken,
+            hasToken: !!(accessToken && Date.now() < tokenExpires),
             tokenExpires: tokenExpires ? new Date(tokenExpires).toISOString() : null
         }
-    });
+    };
+    res.json(healthStatus);
 });
 
+// RUTAS PRINCIPALES
 app.get("/top-argentina", ensureToken, async (req, res) => {
     try {
-        console.log('🎵 Buscando canciones populares de Argentina...');
+        console.log('INFO: Buscando canciones populares de Argentina...');
         
         const searchQueries = [
             "genre:argentina popular",
@@ -166,7 +148,6 @@ app.get("/top-argentina", ensureToken, async (req, res) => {
         
         for (const query of searchQueries) {
             try {
-                console.log(`Búsqueda: ${query}`);
                 const response = await fetch(
                     `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=10&market=AR`,
                     { 
@@ -180,18 +161,13 @@ app.get("/top-argentina", ensureToken, async (req, res) => {
                 if (response.ok) {
                     const data = await response.json();
                     if (data.tracks && data.tracks.items) {
-                        console.log(`Encontrados ${data.tracks.items.length} tracks para "${query}"`);
                         allTracks = [...allTracks, ...data.tracks.items];
                     }
-                } else {
-                    console.log(`Búsqueda fallida para: ${query} - Status: ${response.status}`);
                 }
             } catch (error) {
-                console.log(`Error en búsqueda: ${query}`, error.message);
+                console.log(`WARN: Busqueda fallida para: ${query}`, error.message);
             }
         }
-        
-        console.log(`Total de tracks recolectados: ${allTracks.length}`);
         
         const topSongs = allTracks
             .sort((a, b) => b.popularity - a.popularity)
@@ -203,35 +179,28 @@ app.get("/top-argentina", ensureToken, async (req, res) => {
                 artist: track.artists.map(artist => artist.name).join(", "),
                 album: track.album.name,
                 album_image: track.album.images[0]?.url || '',
-                popularity: track.popularity,
-                preview_url: track.preview_url || null
+                popularity: track.popularity
             }));
         
-        console.log('Top 6 canciones de Argentina procesadas');
+        console.log(`INFO: ${topSongs.length} canciones encontradas`);
         
-        res.json({
-            success: true,
-            count: topSongs.length,
-            songs: topSongs,
-            generated_at: new Date().toISOString()
-        });
+        res.json(topSongs);
         
     } catch (err) {
-        console.error('Error en /top-argentina:', err.message);
+        console.error('ERROR en /top-argentina:', err.message);
         res.status(500).json({ 
-            success: false,
             error: "Error obteniendo canciones populares de Argentina",
-            message: err.message 
+            details: err.message 
         });
     }
 });
 
 app.get("/search", ensureToken, async (req, res) => {
     const q = req.query.q;
-    if (!q) return res.json({ success: false, error: "Query parameter 'q' is required" });
+    if (!q) return res.json([]);
     
     try {
-        console.log('🔍 Buscando álbumes para:', q);
+        console.log(`INFO: Buscando albumes para: ${q}`);
         const response = await fetch(
             `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=album&limit=5`,
             { 
@@ -242,29 +211,21 @@ app.get("/search", ensureToken, async (req, res) => {
             }
         );
 
-        console.log('📊 Estado de búsqueda:', response.status);
+        console.log(`DEBUG - Search response status: ${response.status}`);
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('Error de API de Spotify:', errorText);
             throw new Error(`Spotify API error: ${response.status} - ${errorText}`);
         }
 
         const data = await response.json();
-        console.log('Álbumes encontrados:', data.albums?.items?.length || 0);
-        
-        res.json({
-            success: true,
-            query: q,
-            count: data.albums?.items?.length || 0,
-            albums: data.albums?.items || []
-        });
+        console.log(`INFO: ${data.albums?.items?.length || 0} albumes encontrados`);
+        res.json(data.albums.items);
     } catch (err) {
-        console.error('Error en búsqueda:', err.message);
+        console.error('ERROR en /search:', err);
         res.status(500).json({ 
-            success: false,
-            error: "Error buscando álbumes en Spotify",
-            message: err.message 
+            error: "Error buscando albumes en Spotify",
+            details: err.message 
         });
     }
 });
@@ -273,14 +234,10 @@ app.get("/album-by-track", ensureToken, async (req, res) => {
     const trackId = req.query.trackId;
     
     if (!trackId) {
-        return res.status(400).json({ 
-            success: false,
-            error: "Track ID is required" 
-        });
+        return res.status(400).json({ error: "Track ID is required" });
     }
     
     try {
-        console.log(`🎵 Obteniendo información del track: ${trackId}`);
         const response = await fetch(
             `https://api.spotify.com/v1/tracks/${trackId}`,
             { 
@@ -293,39 +250,24 @@ app.get("/album-by-track", ensureToken, async (req, res) => {
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('Error de API de Spotify:', errorText);
             throw new Error(`Spotify API error: ${response.status} - ${errorText}`);
         }
 
         const trackData = await response.json();
         
         const albumData = {
-            success: true,
-            album: {
-                id: trackData.album.id,
-                name: trackData.album.name,
-                artist: trackData.album.artists.map(artist => artist.name).join(", "),
-                images: trackData.album.images,
-                release_date: trackData.album.release_date,
-                total_tracks: trackData.album.total_tracks
-            },
-            track: {
-                id: trackData.id,
-                name: trackData.name,
-                duration_ms: trackData.duration_ms,
-                explicit: trackData.explicit
-            }
+            id: trackData.album.id,
+            name: trackData.album.name,
+            artist: trackData.album.artists.map(artist => artist.name).join(", ")
         };
         
-        console.log(`Información del álbum obtenida: ${albumData.album.name}`);
         res.json(albumData);
         
     } catch (err) {
-        console.error('Error obteniendo álbum por track:', err.message);
+        console.error('ERROR en /album-by-track:', err);
         res.status(500).json({ 
-            success: false,
-            error: "Error obteniendo información del álbum",
-            message: err.message 
+            error: "Error obteniendo informacion del album",
+            details: err.message 
         });
     }
 });
@@ -333,16 +275,12 @@ app.get("/album-by-track", ensureToken, async (req, res) => {
 // INICIAR SERVIDOR
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log('='.repeat(60));
-    console.log('SOUNDBOX BACKEND API INICIADA');
-    console.log('='.repeat(60));
+    console.log('='.repeat(50));
+    console.log(`SoundBox Backend iniciado`);
     console.log(`Puerto: ${PORT}`);
-    console.log(`Spotify Client ID: ${CLIENT_ID ? 'Configurado' : 'NO CONFIGURADO'}`);
-    console.log(`Spotify Client Secret: ${CLIENT_SECRET ? 'Configurado' : 'NO CONFIGURADO'}`);
-    console.log(`CORS Origins permitidos:`, allowedOrigins);
-    console.log(`URL Local: http://localhost:${PORT}`);
-    console.log(`Ruta de salud: http://localhost:${PORT}/health`);
+    console.log(`Client ID: ${CLIENT_ID ? "Configurado" : "NO CONFIGURADO"}`);
+    console.log(`CORS Origin: ${process.env.CORS_ORIGIN || 'Usando valor por defecto'}`);
+    console.log(`Health check: http://localhost:${PORT}/health`);
     console.log(`Endpoint principal: http://localhost:${PORT}/top-argentina`);
-    console.log('='.repeat(60));
-    console.log('Obteniendo token inicial de Spotify...');
+    console.log('='.repeat(50));
 });

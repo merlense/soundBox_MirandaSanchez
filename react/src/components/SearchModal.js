@@ -15,28 +15,29 @@ const SearchModal = ({ show, onHide, onSelectAlbum }) => {
     const artistNames = album.artists.map(a => a.name).join(', ');
     let albumName = album.name;
     
-    // Si el nombre del álbum es igual al artista, lo diferenciamos
+    // Si el nombre del álbum es igual al artista, añadimos el tipo
     if (album.name.toLowerCase() === artistNames.toLowerCase()) {
       if (album.album_type === 'album') {
-        if (album.release_date) {
-          const year = new Date(album.release_date).getFullYear();
-          albumName = `Álbum (${year})`;
-        } else {
-          albumName = 'Álbum';
-        }
+        albumName = `${album.name} (Álbum)`;
       } else if (album.album_type === 'single') {
-        if (album.release_date) {
-          const year = new Date(album.release_date).getFullYear();
-          albumName = `Single (${year})`;
-        } else {
-          albumName = 'Single';
-        }
+        albumName = `${album.name} (Single)`;
+      } else if (album.album_type === 'compilation') {
+        albumName = `${album.name} (Compilación)`;
+      }
+    }
+    
+    // Si tiene fecha, la mostramos siempre
+    if (album.release_date) {
+      const year = new Date(album.release_date).getFullYear();
+      // Solo añadimos el año si no está ya en el nombre
+      if (!albumName.includes(`(${year})`) && !albumName.includes(`[${year}]`)) {
+        albumName = `${albumName} • ${year}`;
       }
     }
     
     // Si el nombre es muy largo, lo acortamos
-    if (albumName.length > 50) {
-      return albumName.substring(0, 47) + '...';
+    if (albumName.length > 60) {
+      return albumName.substring(0, 57) + '...';
     }
     
     return albumName;
@@ -180,6 +181,7 @@ const SearchModal = ({ show, onHide, onSelectAlbum }) => {
                     const artistNames = album.artists.map(a => a.name).join(', ');
                     const displayAlbumName = formatAlbumName(album);
                     const originalAlbumName = album.name;
+                    const isSameAsArtist = originalAlbumName.toLowerCase() === artistNames.toLowerCase();
                     
                     return (
                       <div 
@@ -207,16 +209,24 @@ const SearchModal = ({ show, onHide, onSelectAlbum }) => {
                               <h5 className="album-title" title={originalAlbumName}>
                                 {displayAlbumName}
                               </h5>
-                              {originalAlbumName.length > 50 && (
+                              {isSameAsArtist && (
+                                <span 
+                                  className="album-same-name-indicator" 
+                                  title="Este álbum tiene el mismo nombre que el artista"
+                                >
+                                  <i className="fas fa-info-circle"></i>
+                                </span>
+                              )}
+                              {originalAlbumName.length > 60 && (
                                 <span 
                                   className="album-full-name" 
-                                  title={originalAlbumName}
+                                  title={`Nombre completo: ${originalAlbumName}`}
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    alert(`Nombre completo:\n${originalAlbumName}`);
+                                    alert(`Nombre completo del álbum:\n"${originalAlbumName}"\n\nArtista: ${artistNames}`);
                                   }}
                                 >
-                                  <i className="fas fa-ellipsis-h"></i>
+                                  <i className="fas fa-expand-alt"></i>
                                 </span>
                               )}
                             </div>
@@ -225,11 +235,20 @@ const SearchModal = ({ show, onHide, onSelectAlbum }) => {
                               {artistNames}
                             </p>
                             {album.album_type && (
-                              <span className="album-type-badge">
-                                {album.album_type === 'album' ? 'Álbum' : 
-                                 album.album_type === 'single' ? 'Single' : 
-                                 album.album_type === 'compilation' ? 'Compilación' : album.album_type}
-                              </span>
+                              <div className="album-type-container">
+                                <span className="album-type-badge">
+                                  <i className={`fas fa-${album.album_type === 'album' ? 'compact-disc' : album.album_type === 'single' ? 'music' : 'layer-group'} me-1`}></i>
+                                  {album.album_type === 'album' ? 'Álbum' : 
+                                   album.album_type === 'single' ? 'Single' : 
+                                   album.album_type === 'compilation' ? 'Compilación' : album.album_type}
+                                </span>
+                                {album.total_tracks && (
+                                  <span className="album-tracks-badge">
+                                    <i className="fas fa-music me-1"></i>
+                                    {album.total_tracks} {album.total_tracks === 1 ? 'canción' : 'canciones'}
+                                  </span>
+                                )}
+                              </div>
                             )}
                           </div>
                         </div>
@@ -239,27 +258,37 @@ const SearchModal = ({ show, onHide, onSelectAlbum }) => {
                             <div className="meta-item">
                               <i className="fas fa-calendar me-1"></i>
                               <div>
-                                <span className="meta-label">Año</span>
+                                <span className="meta-label">Lanzamiento</span>
                                 <strong className="meta-value">
-                                  {album.release_date ? new Date(album.release_date).getFullYear() : 'N/A'}
+                                  {album.release_date ? 
+                                    new Date(album.release_date).toLocaleDateString('es-ES', { 
+                                      year: 'numeric', 
+                                      month: 'short', 
+                                      day: 'numeric' 
+                                    }) : 
+                                    'No disponible'
+                                  }
                                 </strong>
                               </div>
                             </div>
                             <div className="meta-item">
-                              <i className="fas fa-music me-1"></i>
+                              <i className="fas fa-hashtag me-1"></i>
                               <div>
-                                <span className="meta-label">Canciones</span>
+                                <span className="meta-label">Popularidad</span>
                                 <strong className="meta-value">
-                                  {album.total_tracks || '?'}
+                                  {album.popularity ? `${album.popularity}/100` : 'N/A'}
                                 </strong>
                               </div>
                             </div>
                             <div className="meta-item">
-                              <i className="fas fa-chart-line me-1"></i>
+                              <i className="fas fa-globe me-1"></i>
                               <div>
-                                <span className="meta-label">Tipo</span>
+                                <span className="meta-label">Mercado</span>
                                 <strong className="meta-value">
-                                  {album.album_type === 'album' ? 'Álbum' : 'Single'}
+                                  {album.available_markets?.length > 0 ? 
+                                    `${album.available_markets.length} países` : 
+                                    'Global'
+                                  }
                                 </strong>
                               </div>
                             </div>
@@ -273,7 +302,7 @@ const SearchModal = ({ show, onHide, onSelectAlbum }) => {
                             }}
                           >
                             <i className="fas fa-plus-circle me-2"></i>
-                            Agregar "{displayAlbumName}"
+                            Agregar "{displayAlbumName.split(' • ')[0].split(' (')[0]}"
                           </button>
                         </div>
                         
@@ -340,6 +369,20 @@ const SearchModal = ({ show, onHide, onSelectAlbum }) => {
                       style={{ cursor: 'pointer' }}
                     >
                       The Dark Side of the Moon
+                    </span>
+                    <span 
+                      className="badge bg-secondary"
+                      onClick={() => setSearchQuery('Bad Bunny')}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      Bad Bunny
+                    </span>
+                    <span 
+                      className="badge bg-secondary"
+                      onClick={() => setSearchQuery('Soda Stereo')}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      Soda Stereo
                     </span>
                   </div>
                 </div>

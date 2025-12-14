@@ -1,3 +1,5 @@
+//spotifyService
+
 const API_URL = 'https://soundbox.up.railway.app';
 
 export const searchAlbums = async (query) => {
